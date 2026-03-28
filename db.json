@@ -1,0 +1,56 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "nombre": "Carlos Mendoza",
+      "email": "gerente@demo.com",
+      "password": "123456",
+      "rol": "gerente"
+    },
+    {
+      "id": "2",
+      "nombre": "Ana López",
+      "email": "ana@demo.com",
+      "password": "123456",
+      "rol": "usuario"
+    },
+    {
+      "id": "3",
+      "nombre": "Luis Martínez",
+      "email": "luis@demo.com",
+      "password": "123456",
+      "rol": "usuario"
+    }
+  ],
+  "projects": [
+    {
+      "id": "1",
+      "nombre": "Rediseño Web",
+      "descripcion": "Rediseño completo del sitio web corporativo"
+    },
+    {
+      "id": "2",
+      "nombre": "App Móvil",
+      "descripcion": "Aplicación móvil para clientes"
+    },
+    {
+      "id": "3",
+      "nombre": "Sistema CRM",
+      "descripcion": "Implementación del CRM empresarial"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "5bb0",
+      "titulo": "hola como estan",
+      "descripcion": "holaa",
+      "estado": "pendiente",
+      "prioridad": "media",
+      "projectId": 3,
+      "assignedTo": 2,
+      "fechaLimite": "2026-04-01",
+      "fechaCreacion": "2026-03-28"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}
