@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import Head from 'next/head'
+import Link from 'next/link'
 import {
   Plus, Search, Clock, CheckCircle2, Loader2,
   AlertCircle, ListTodo, RefreshCw, X,
@@ -65,7 +66,8 @@ export default function TareasPage() {
   // se usa para que no falle al renderizar en el servidor
   useEffect(() => {
     setMontado(true)
-    const stored = localStorage.getItem('usuario')
+
+    const stored = localStorage.getItem('user')
     if (stored) {
       try {
         setUsuario(JSON.parse(stored))
@@ -118,7 +120,7 @@ export default function TareasPage() {
     completada:  tareas.filter((t) => t.estado === 'completada').length,
   }
 
-  // Handlers CRUD
+
   const handleCrear = () => {
     setTareaEditando(null)
     setMostrarFormulario(true)
@@ -193,6 +195,13 @@ export default function TareasPage() {
               </p>
             </div>
             <div className="flex items-center gap-2">
+              {/* link de vuelta al dashboard para no quedar atrapado en esta página */}
+              <Link
+                href="/dashboard"
+                className="px-4 py-2.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors font-medium"
+              >
+                ← Dashboard
+              </Link>
               <button
                 onClick={cargarDatos}
                 disabled={cargando}

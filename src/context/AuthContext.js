@@ -10,6 +10,25 @@ export function AuthProvider({ children }) {
     if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
+
+    // si no hay usuarios en localStorage, traemos los del servidor (los demo de db.json)
+    const usersGuardados = JSON.parse(localStorage.getItem("users")) || [];
+    if (usersGuardados.length === 0) {
+      fetch("http://localhost:3001/users")
+        .then((r) => r.json())
+        .then((usersDelServer) => {
+          // normalizamos para que tengan name/role Y nombre/rol, así todo el código los entiende
+          const normalizados = usersDelServer.map((u) => ({
+            ...u,
+            name: u.nombre,
+            role: u.rol,
+          }));
+          localStorage.setItem("users", JSON.stringify(normalizados));
+        })
+        .catch(() => {
+          // si el servidor no está corriendo no pasa nada, igual funciona con usuarios registrados
+        });
+    }
   }, []);
 
   const register = (newUser) => {
@@ -38,8 +57,17 @@ export function AuthProvider({ children }) {
       return { success: false, message: "Correo o contraseña incorrectos" };
     }
 
-    setUser(foundUser);
-    localStorage.setItem("user", JSON.stringify(foundUser));
+    // guardamos con los dos formatos de campos para que dashboard (name/role) y tareas (nombre/rol) funcionen
+    const userNormalizado = {
+      ...foundUser,
+      name: foundUser.nombre || foundUser.name,
+      nombre: foundUser.nombre || foundUser.name,
+      role: foundUser.rol || foundUser.role,
+      rol: foundUser.rol || foundUser.role,
+    };
+
+    setUser(userNormalizado);
+    localStorage.setItem("user", JSON.stringify(userNormalizado));
 
     return { success: true, message: "Inicio de sesión exitoso" };
   };

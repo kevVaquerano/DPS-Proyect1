@@ -1,3 +1,11 @@
+import { useEffect } from "react";
+import { useRouter } from "next/router";
+
+// el kanban de tareas está en pages/tareas/index.jsx
 export default function Tasks() {
-    return <h1>Tareas</h1>;
-  }
+  const router = useRouter();
+  useEffect(() => {
+    router.replace("/tareas");
+  }, []);
+  return null;
+}

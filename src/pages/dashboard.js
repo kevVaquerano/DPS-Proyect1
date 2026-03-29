@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 import { useAuth } from "../context/AuthContext";
 
 export default function Dashboard() {
@@ -149,15 +150,21 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <button
-          onClick={() => {
-            logout();
-            router.push("/");
-          }}
-          style={styles.logoutButton}
-        >
-          Cerrar sesión
-        </button>
+        <div style={styles.actions}>
+          {/* botón para ir al kanban de tareas */}
+          <Link href="/tareas" style={styles.tareasButton}>
+            Ver Tareas
+          </Link>
+          <button
+            onClick={() => {
+              logout();
+              router.push("/");
+            }}
+            style={styles.logoutButton}
+          >
+            Cerrar sesión
+          </button>
+        </div>
       </header>
 
       <section style={styles.cardsContainer}>
@@ -321,6 +328,20 @@ const styles = {
   subtitle: {
     marginTop: "8px",
     color: "#444",
+  },
+  actions: {
+    display: "flex",
+    gap: "10px",
+    alignItems: "center",
+  },
+  tareasButton: {
+    backgroundColor: "#6366f1",
+    color: "#fff",
+    padding: "10px 16px",
+    borderRadius: "8px",
+    textDecoration: "none",
+    fontWeight: "bold",
+    fontSize: "14px",
   },
   logoutButton: {
     backgroundColor: "#d62828",
