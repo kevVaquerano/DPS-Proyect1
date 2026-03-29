@@ -4,53 +4,102 @@
       "id": "1",
       "nombre": "Carlos Mendoza",
       "email": "gerente@demo.com",
-      "password": "123456",
-      "rol": "gerente"
+      "password": "1234",
+      "rol": "gerente",
+      "avatar": "https://ui-avatars.com/api/?name=Carlos+Mendoza&background=6366f1&color=fff"
     },
     {
       "id": "2",
       "nombre": "Ana López",
       "email": "ana@demo.com",
-      "password": "123456",
-      "rol": "usuario"
+      "password": "1234",
+      "rol": "usuario",
+      "avatar": "https://ui-avatars.com/api/?name=Ana+Lopez&background=f43f5e&color=fff"
     },
     {
       "id": "3",
       "nombre": "Luis Martínez",
       "email": "luis@demo.com",
-      "password": "123456",
-      "rol": "usuario"
+      "password": "1234",
+      "rol": "usuario",
+      "avatar": "https://ui-avatars.com/api/?name=Luis+Martinez&background=10b981&color=fff"
+    },
+    {
+      "id": "4",
+      "nombre": "Elena Rivas",
+      "email": "elena@demo.com",
+      "password": "1234",
+      "rol": "usuario",
+      "avatar": "https://ui-avatars.com/api/?name=Elena+Rivas&background=f59e0b&color=fff"
     }
   ],
   "projects": [
     {
-      "id": "1",
-      "nombre": "Rediseño Web",
-      "descripcion": "Rediseño completo del sitio web corporativo"
+      "id": 1,
+      "nombre": "Rediseño Web Corporativa",
+      "descripcion": "Actualización de la interfaz de usuario y optimización de SEO.",
+      "estado": "En progreso",
+      "progreso": 65
     },
     {
-      "id": "2",
-      "nombre": "App Móvil",
-      "descripcion": "Aplicación móvil para clientes"
+      "id": 2,
+      "nombre": "Desarrollo App Móvil",
+      "descripcion": "Creación de la aplicación nativa para iOS y Android.",
+      "estado": "Pendiente",
+      "progreso": 10
     },
     {
-      "id": "3",
-      "nombre": "Sistema CRM",
-      "descripcion": "Implementación del CRM empresarial"
+      "id": 3,
+      "nombre": "Migración de Base de Datos",
+      "descripcion": "Traslado de datos de SQL Server a PostgreSQL para mayor escalabilidad.",
+      "estado": "Completado",
+      "progreso": 100
     }
   ],
   "tasks": [
     {
-      "id": "5bb0",
-      "titulo": "hola como estan",
-      "descripcion": "holaa",
+      "id": "1",
+      "titulo": "Diseñar Mockups de Home",
+      "descripcion": "Crear los diseños en alta fidelidad para la página de inicio.",
+      "estado": "completada",
+      "prioridad": "alta",
+      "projectId": 1,
+      "assignedTo": "2",
+      "fechaLimite": "2026-03-20",
+      "fechaCreacion": "2026-03-10"
+    },
+    {
+      "id": "2",
+      "titulo": "Configurar Auth con NextAuth",
+      "descripcion": "Implementar el flujo de autenticación seguro en la web.",
+      "estado": "en_progreso",
+      "prioridad": "alta",
+      "projectId": 1,
+      "assignedTo": "3",
+      "fechaLimite": "2026-04-05",
+      "fechaCreacion": "2026-03-25"
+    },
+    {
+      "id": "3",
+      "titulo": "Investigación de Mercado App",
+      "descripcion": "Analizar la competencia directa en las tiendas de apps.",
       "estado": "pendiente",
       "prioridad": "media",
-      "projectId": 3,
-      "assignedTo": 2,
-      "fechaLimite": "2026-04-01",
+      "projectId": 2,
+      "assignedTo": "4",
+      "fechaLimite": "2026-04-15",
       "fechaCreacion": "2026-03-28"
+    },
+    {
+      "id": "4",
+      "titulo": "Backup Final SQL Server",
+      "descripcion": "Realizar copia de seguridad antes del cierre del servidor antiguo.",
+      "estado": "completada",
+      "prioridad": "baja",
+      "projectId": 3,
+      "assignedTo": "2",
+      "fechaLimite": "2026-03-25",
+      "fechaCreacion": "2026-03-20"
     }
-  ],
-  "$schema": "./node_modules/json-server/schema.json"
+  ]
 }
