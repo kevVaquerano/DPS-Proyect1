@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 
-// el login real está en pages/index.js, así que solo redirigimos ahí
+// redirigimos 
 export default function Login() {
   const router = useRouter();
   useEffect(() => {
