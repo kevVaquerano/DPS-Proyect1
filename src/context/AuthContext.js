@@ -26,7 +26,7 @@ export function AuthProvider({ children }) {
           localStorage.setItem("users", JSON.stringify(normalizados));
         })
         .catch(() => {
-          // si el servidor no está corriendo no pasa nada, igual funciona con usuarios registrados
+          // si el servidor no está corriendo, igual funciona con usuarios registrados
         });
     }
   }, []);
