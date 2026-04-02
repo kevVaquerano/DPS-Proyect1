@@ -8,4 +8,4 @@ export default function Login() {
     router.replace("/");
   }, []);
   return null;
-}
+}  

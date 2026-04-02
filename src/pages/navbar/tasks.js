@@ -8,4 +8,5 @@ export default function Tasks() {
     router.replace("/tareas");
   }, []);
   return null;
-}
+}         
+  

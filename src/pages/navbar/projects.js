@@ -7,4 +7,4 @@ export default function Projects() {
     router.replace("/dashboard");
   }, []);
   return null;
-}
+}    

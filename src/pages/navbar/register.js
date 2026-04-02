@@ -7,4 +7,4 @@ export default function Register() {
     router.replace("/");
   }, []);
   return null;
-}
+}    
