@@ -10,6 +10,14 @@
     },
     {
       "id": "2",
+      "nombre": "Sofía Castillo",
+      "email": "gerentecastillo@demo.com",
+      "password": "1234",
+      "rol": "gerente",
+      "avatar": "https://ui-avatars.com/api/?name=Sofia+Castillo&background=8b5cf6&color=fff"
+    },
+    {
+      "id": "3",
       "nombre": "Ana López",
       "email": "ana@demo.com",
       "password": "1234",
@@ -17,7 +25,7 @@
       "avatar": "https://ui-avatars.com/api/?name=Ana+Lopez&background=f43f5e&color=fff"
     },
     {
-      "id": "3",
+      "id": "4",
       "nombre": "Luis Martínez",
       "email": "luis@demo.com",
       "password": "1234",
@@ -25,7 +33,7 @@
       "avatar": "https://ui-avatars.com/api/?name=Luis+Martinez&background=10b981&color=fff"
     },
     {
-      "id": "4",
+      "id": "5",
       "nombre": "Elena Rivas",
       "email": "elena@demo.com",
       "password": "1234",
@@ -35,25 +43,43 @@
   ],
   "projects": [
     {
-      "id": 1,
+      "id": "1",
       "nombre": "Rediseño Web Corporativa",
       "descripcion": "Actualización de la interfaz de usuario y optimización de SEO.",
-      "estado": "En progreso",
-      "progreso": 65
+      "estado": "Completado",
+      "prioridad": "alta",
+      "progreso": 100,
+      "progresoAnterior": 100,
+      "creadoPor": "1",
+      "assignedTo": "3",
+      "fechaInicio": "2026-02-20",
+      "fechaFin": "2026-03-21"
     },
     {
-      "id": 2,
+      "id": "2",
       "nombre": "Desarrollo App Móvil",
       "descripcion": "Creación de la aplicación nativa para iOS y Android.",
-      "estado": "Pendiente",
-      "progreso": 10
+      "estado": "En progreso",
+      "prioridad": "baja",
+      "progreso": 65,
+      "progresoAnterior": 65,
+      "creadoPor": "2",
+      "assignedTo": "3",
+      "fechaInicio": "2026-02-27",
+      "fechaFin": "2026-07-30"
     },
     {
-      "id": 3,
+      "id": "3",
       "nombre": "Migración de Base de Datos",
       "descripcion": "Traslado de datos de SQL Server a PostgreSQL para mayor escalabilidad.",
-      "estado": "Completado",
-      "progreso": 100
+      "estado": "Pendiente",
+      "prioridad": "media",
+      "progreso": 35,
+      "progresoAnterior": 35,
+      "creadoPor": "1",
+      "assignedTo": "4",
+      "fechaInicio": "2026-01-09",
+      "fechaFin": "2026-06-24"
     }
   ],
   "tasks": [
@@ -63,43 +89,42 @@
       "descripcion": "Crear los diseños en alta fidelidad para la página de inicio.",
       "estado": "completada",
       "prioridad": "alta",
-      "projectId": 1,
+      "progreso": 100,
+      "progresoAnterior": 100,
+      "creadoPor": "1",
+      "projectId": "1",
       "assignedTo": "2",
-      "fechaLimite": "2026-03-20",
-      "fechaCreacion": "2026-03-10"
+      "fechaInicio": "2026-03-10",
+      "fechaFin": "2026-05-27"
     },
     {
       "id": "2",
-      "titulo": "Configurar Auth con NextAuth",
-      "descripcion": "Implementar el flujo de autenticación seguro en la web.",
-      "estado": "en_progreso",
-      "prioridad": "alta",
-      "projectId": 1,
-      "assignedTo": "3",
-      "fechaLimite": "2026-04-05",
-      "fechaCreacion": "2026-03-25"
-    },
-    {
-      "id": "3",
       "titulo": "Investigación de Mercado App",
       "descripcion": "Analizar la competencia directa en las tiendas de apps.",
       "estado": "pendiente",
       "prioridad": "media",
-      "projectId": 2,
+      "progreso": 20,
+      "progresoAnterior": 20,
+      "creadoPor": "2",
+      "projectId": "2",
       "assignedTo": "4",
-      "fechaLimite": "2026-04-15",
-      "fechaCreacion": "2026-03-28"
+      "fechaInicio": "2026-01-15",
+      "fechaFin": "2026-01-28"
     },
     {
-      "id": "4",
+      "id": "3",
       "titulo": "Backup Final SQL Server",
       "descripcion": "Realizar copia de seguridad antes del cierre del servidor antiguo.",
-      "estado": "completada",
+      "estado": "en_progreso",
       "prioridad": "baja",
-      "projectId": 3,
+      "progreso": 34,
+      "progresoAnterior": 34,
+      "creadoPor": "2",
+      "projectId": "3",
       "assignedTo": "2",
-      "fechaLimite": "2026-03-25",
-      "fechaCreacion": "2026-03-20"
+      "fechaInicio": "2026-05-25",
+      "fechaFin": "2026-06-20"
     }
-  ]
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
 }
