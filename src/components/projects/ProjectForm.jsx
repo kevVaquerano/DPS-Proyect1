@@ -108,9 +108,14 @@ export default function ProjectForm({
       }
     }
 
+    const fechaFinOriginal = tarea?.fechaFin || tarea?.fechaLimite || "";
+
     if (form.fechaFin) {
       const fin = new Date(`${form.fechaFin}T00:00:00`);
-      if (fin < hoy) {
+      const cambioFecha = form.fechaFin !== fechaFinOriginal;
+
+      // Solo validar si es nueva o si cambió la fecha
+      if ((!tarea || cambioFecha) && fin < hoy) {
         nuevosErrores.fechaFin =
           "La fecha final no puede ser anterior a hoy";
       }
