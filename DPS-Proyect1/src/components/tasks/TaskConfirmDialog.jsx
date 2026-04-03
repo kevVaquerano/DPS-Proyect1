@@ -1,6 +1,16 @@
 /**
- * Diálogo de confirmación reutilizable para acciones sensibles
- * sobre tareas, como eliminar o confirmar una operación.
+ * Diálogo de confirmación reutilizable para tareas.
+ *
+ * Se usa en acciones delicadas, por ejemplo:
+ * - eliminar una tarea
+ * - confirmar alguna acción importante
+ *
+ * Recibe:
+ * - titulo
+ * - mensaje
+ * - tipo
+ * - onConfirmar
+ * - onCancelar
  */
 
 import { AlertTriangle, Trash2, X } from "lucide-react";
@@ -12,7 +22,10 @@ export default function ConfirmDialog({
   onConfirmar,
   onCancelar,
 }) {
-  // Define si el diálogo se muestra como peligro o advertencia.
+  /**
+   * Si el tipo es "peligro", el diálogo se pinta en rojo.
+   * Si no, se pinta como advertencia.
+   */
   const esPeligro = tipo === "peligro";
 
   return (
@@ -20,10 +33,17 @@ export default function ConfirmDialog({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in"
       onClick={onCancelar}
     >
+      {/**
+       * Click en el fondo = cancelar / cerrar modal
+       */}
       <div
         className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
+        {/**
+         * stopPropagation evita que el click dentro del cuadro
+         * cierre el diálogo accidentalmente.
+         */}
         <div className="flex items-center justify-between p-6 pb-3">
           <div className="flex items-center gap-3">
             <div
@@ -37,6 +57,7 @@ export default function ConfirmDialog({
                 <AlertTriangle className="w-5 h-5 text-amber-600" />
               )}
             </div>
+
             <h3 className="text-lg font-semibold text-gray-900">{titulo}</h3>
           </div>
 
@@ -58,6 +79,7 @@ export default function ConfirmDialog({
             >
               Cancelar
             </button>
+
             <button
               onClick={onConfirmar}
               className={`px-5 py-2.5 text-sm font-medium text-white rounded-xl transition-colors ${

@@ -1,26 +1,48 @@
 /**
  * Modal de formulario para crear o editar tareas.
  *
- * Incluye validaciones de campos obligatorios, fechas,
- * progreso y cambio automático de progreso al marcar
- * la tarea como completada.
+ * ¿Qué hace este componente?
+ * - Muestra un formulario dentro de un modal.
+ * - Sirve tanto para crear una tarea nueva como para editar una existente.
+ * - Valida campos obligatorios.
+ * - Valida fechas.
+ * - Controla el progreso automáticamente cuando la tarea cambia a completada.
+ *
+ * Este componente NO guarda directamente en la base de datos.
+ * Solo prepara y valida la información, y luego llama a onGuardar().
  */
 
 import { useEffect, useState } from "react";
 import { Plus, Save, X } from "lucide-react";
 
+/**
+ * Opciones de prioridad disponibles en el select.
+ * Se separan en una constante para mantener el código más ordenado
+ * y evitar repetir texto dentro del JSX.
+ */
 const PRIORIDADES = [
   { value: "alta", label: "Alta" },
   { value: "media", label: "Media" },
   { value: "baja", label: "Baja" },
 ];
 
+/**
+ * Opciones de estado de una tarea.
+ * Estos values son los que realmente se guardan.
+ * Los label son los que ve el usuario.
+ */
 const ESTADOS = [
   { value: "pendiente", label: "Pendiente" },
   { value: "en_progreso", label: "En Progreso" },
   { value: "completada", label: "Completada" },
 ];
 
+/**
+ * Estado inicial del formulario.
+ * Se usa:
+ * - cuando se crea una nueva tarea
+ * - cuando se limpia el formulario al cerrar/abrir sin edición
+ */
 const FORM_INICIAL = {
   titulo: "",
   descripcion: "",
@@ -43,11 +65,25 @@ export default function TaskForm({
   onGuardar,
   onCerrar,
 }) {
+  /**
+   * form:
+   * Guarda todos los valores actuales del formulario.
+   *
+   * errores:
+   * Guarda los mensajes de error por campo.
+   */
   const [form, setForm] = useState(FORM_INICIAL);
   const [errores, setErrores] = useState({});
 
-  // Carga los datos de la tarea en el formulario cuando se edita.
-  // Si no hay tarea, reinicia el formulario con valores por defecto.
+  /**
+   * useEffect para cargar datos al editar.
+   *
+   * Si existe "tarea", significa que se abrió el formulario en modo edición,
+   * entonces se llenan los campos con sus valores actuales.
+   *
+   * Si no existe "tarea", significa que estamos creando una nueva,
+   * así que se reinicia al formulario inicial.
+   */
   useEffect(() => {
     if (tarea) {
       setForm({
@@ -56,10 +92,31 @@ export default function TaskForm({
         estado: tarea.estado || "pendiente",
         prioridad: tarea.prioridad || "media",
         progreso: tarea.progreso ?? 0,
+
+        /**
+         * progresoAnterior se usa para recordar el porcentaje previo
+         * cuando una tarea se marca como completada.
+         *
+         * Ejemplo:
+         * si estaba en 60%, al pasar a completada se pone 100%.
+         * pero si luego vuelve a "pendiente" o "en_progreso",
+         * recupera ese 60% guardado.
+         */
         progresoAnterior: tarea.progresoAnterior ?? tarea.progreso ?? 0,
+
         projectId: tarea.projectId || "",
         assignedTo: tarea.assignedTo || "",
+
+        /**
+         * Si no existe fechaInicio, se intenta usar fechaCreacion
+         * para no dejar ese dato vacío en tareas viejas o incompletas.
+         */
         fechaInicio: tarea.fechaInicio || tarea.fechaCreacion || "",
+
+        /**
+         * Compatibilidad con dos posibles nombres de campo:
+         * fechaFin o fechaLimite.
+         */
         fechaFin: tarea.fechaFin || tarea.fechaLimite || "",
       });
       return;
@@ -68,7 +125,18 @@ export default function TaskForm({
     setForm(FORM_INICIAL);
   }, [tarea]);
 
-  // Valida campos obligatorios, rango de progreso y consistencia de fechas.
+  /**
+   * Función de validación general.
+   *
+   * Revisa:
+   * - campos obligatorios
+   * - rango del progreso
+   * - coherencia entre estado y progreso
+   * - fechas obligatorias
+   * - fecha de inicio válida
+   * - fecha final válida
+   * - que fecha final no sea anterior a la fecha de inicio
+   */
   const validar = () => {
     const nuevosErrores = {};
 
@@ -88,15 +156,26 @@ export default function TaskForm({
       nuevosErrores.assignedTo = "Debes seleccionar a un usuario";
     }
 
+    /**
+     * El progreso siempre debe estar entre 0 y 100.
+     */
     if (form.progreso < 0 || form.progreso > 100) {
       nuevosErrores.progreso = "El progreso debe estar entre 0 y 100";
     }
 
+    /**
+     * Regla lógica:
+     * si una tarea está completada, su progreso debe ser 100.
+     */
     if (form.estado === "completada" && Number(form.progreso) !== 100) {
       nuevosErrores.progreso =
         "Si la tarea está completada, el progreso debe ser 100";
     }
 
+    /**
+     * Se obtiene la fecha actual sin horas,
+     * para comparar solo día/mes/año.
+     */
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
 
@@ -108,6 +187,13 @@ export default function TaskForm({
       nuevosErrores.fechaFin = "La fecha final es obligatoria";
     }
 
+    /**
+     * Solo se valida que la fechaInicio no sea pasada
+     * cuando la tarea es nueva.
+     *
+     * En edición no se valida igual porque la fecha de inicio
+     * ya quedó guardada y además no se puede modificar.
+     */
     if (!tarea && form.fechaInicio) {
       const inicio = new Date(`${form.fechaInicio}T00:00:00`);
       if (inicio < hoy) {
@@ -116,19 +202,34 @@ export default function TaskForm({
       }
     }
 
+    /**
+     * Se guarda la fecha final original de la tarea en edición.
+     * Esto ayuda a no bloquear tareas viejas que ya tenían una fecha pasada.
+     */
     const fechaFinOriginal = tarea?.fechaFin || tarea?.fechaLimite || "";
 
     if (form.fechaFin) {
       const fin = new Date(`${form.fechaFin}T00:00:00`);
       const cambioFecha = form.fechaFin !== fechaFinOriginal;
 
-      // Solo validar si es nueva o si cambió la fecha
+      /**
+       * Solo se valida si:
+       * - la tarea es nueva
+       * - o en edición sí cambiaron la fecha final
+       *
+       * Esto evita marcar error si estás editando otra cosa
+       * de una tarea antigua cuya fecha ya pasó.
+       */
       if ((!tarea || cambioFecha) && fin < hoy) {
         nuevosErrores.fechaFin =
           "La fecha final no puede ser anterior a hoy";
       }
     }
 
+    /**
+     * Regla lógica entre fechas:
+     * la fecha final nunca puede ser menor que la fecha inicial.
+     */
     if (form.fechaInicio && form.fechaFin) {
       const inicio = new Date(`${form.fechaInicio}T00:00:00`);
       const fin = new Date(`${form.fechaFin}T00:00:00`);
@@ -140,25 +241,49 @@ export default function TaskForm({
     }
 
     setErrores(nuevosErrores);
+
+    /**
+     * Si no hay errores, el formulario es válido.
+     */
     return Object.keys(nuevosErrores).length === 0;
   };
 
-  // Envía los datos del formulario solo si todas las validaciones son correctas.
+  /**
+   * Maneja el envío del formulario.
+   *
+   * Primero valida.
+   * Si todo está bien, transforma algunos campos al tipo esperado
+   * y llama a onGuardar().
+   */
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!validar()) return;
 
     onGuardar({
       ...form,
+
+      /**
+       * Se asegura que progreso y progresoAnterior sean números.
+       */
       progreso: Number(form.progreso),
       progresoAnterior: Number(form.progresoAnterior ?? 0),
+
+      /**
+       * Se convierten a string o null para mantener consistencia
+       * en los datos enviados.
+       */
       projectId: form.projectId ? String(form.projectId) : null,
       assignedTo: form.assignedTo ? String(form.assignedTo) : null,
     });
   };
 
-  // Actualiza el formulario y conserva/restaura el progreso anterior
-  // cuando el estado cambia entre completada y no completada.
+  /**
+   * Maneja cambios en cualquier campo del formulario.
+   *
+   * Además, contiene lógica especial para:
+   * - cambio de estado
+   * - cambio de progreso
+   */
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -168,6 +293,11 @@ export default function TaskForm({
         [name]: value,
       };
 
+      /**
+       * Lógica al cambiar estado:
+       * - Si pasa a "completada", guarda el progreso anterior y pone 100
+       * - Si sale de "completada", recupera el progresoAnterior
+       */
       if (name === "estado") {
         if (value === "completada") {
           if (prev.estado !== "completada") {
@@ -179,6 +309,13 @@ export default function TaskForm({
         }
       }
 
+      /**
+       * Lógica al cambiar progreso manualmente:
+       * - se convierte a número
+       * - si la tarea NO está completada, también actualiza progresoAnterior
+       *
+       * Así siempre queda guardado el último progreso real antes del 100 automático.
+       */
       if (name === "progreso") {
         const progresoNumero = Number(value);
         nuevoForm.progreso = progresoNumero;
@@ -191,11 +328,19 @@ export default function TaskForm({
       return nuevoForm;
     });
 
+    /**
+     * Si ese campo ya tenía error, se limpia solo ese error
+     * al comenzar a corregirlo.
+     */
     if (errores[name]) {
       setErrores((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
+  /**
+   * Fecha mínima para inputs date.
+   * Se usa para impedir escoger fechas pasadas al crear.
+   */
   const hoyMin = new Date().toISOString().split("T")[0];
 
   return (
@@ -203,10 +348,17 @@ export default function TaskForm({
       className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in"
       onClick={onCerrar}
     >
+      {/**
+       * El fondo oscuro cierra el modal al hacer click afuera.
+       */}
       <div
         className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 sm:mx-0 max-h-[90vh] overflow-y-auto animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
+        {/**
+         * stopPropagation evita que al hacer click dentro del modal
+         * se dispare el onClick del fondo y se cierre.
+         */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <h2 className="text-xl font-semibold text-gray-900">
             {tarea ? "Editar tarea" : "Nueva tarea"}
@@ -221,6 +373,10 @@ export default function TaskForm({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          {/**
+           * Este campo solo aparece al crear una tarea.
+           * En edición no se muestra porque el creador ya quedó definido.
+           */}
           {!tarea && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -341,6 +497,9 @@ export default function TaskForm({
             )}
           </div>
 
+          {/**
+           * Solo gerente puede asignar tareas desde este formulario.
+           */}
           {esGerente && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">

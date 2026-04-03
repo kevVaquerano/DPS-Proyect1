@@ -1,43 +1,80 @@
 /**
  * Contexto global de autenticación.
  *
- * Administra el usuario en sesión, el inicio y cierre de sesión,
- * y el registro de usuarios usando localStorage como persistencia local.
+ * ¿Para qué sirve?
+ * - Mantener el usuario logueado en toda la app
+ * - Evitar pasar props manualmente (prop drilling)
+ * - Centralizar login, logout y registro
+ *
+ * Usa:
+ * - React Context API
+ * - localStorage para persistencia
  */
 
 import { createContext, useContext, useEffect, useState } from "react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-
+/**
+ * Se crea el contexto.
+ */
 const AuthContext = createContext();
 
+/**
+ * Provider principal que envuelve la aplicación.
+ *
+ * Todo lo que esté dentro de este provider
+ * puede acceder a user, login, logout, etc.
+ */
 export function AuthProvider({ children }) {
+  /**
+   * user:
+   * guarda el usuario actual en sesión.
+   */
   const [user, setUser] = useState(null);
 
-  // Al iniciar la app, recupera el usuario guardado en localStorage.
-  // Si no hay usuarios locales, intenta cargarlos desde el servidor.
+  /**
+   * useEffect inicial:
+   * - carga usuario desde localStorage
+   * - carga usuarios desde backend si no existen localmente
+   */
   useEffect(() => {
+    /**
+     * Recupera sesión guardada.
+     */
     const savedUser = localStorage.getItem("user");
     if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
 
+    /**
+     * Recupera lista de usuarios.
+     */
     const usersGuardados = JSON.parse(localStorage.getItem("users")) || [];
 
+    /**
+     * Si no hay usuarios en localStorage,
+     * intenta cargarlos desde el servidor (json-server).
+     */
     if (usersGuardados.length === 0) {
-      fetch(`${API_URL}/users`)
+      fetch("http://localhost:3001/users")
         .then((response) => response.json())
         .then((usersDelServer) => {
           localStorage.setItem("users", JSON.stringify(usersDelServer));
         })
         .catch(() => {
-          // Si falla la carga inicial, la app seguirá usando localStorage.
+          /**
+           * Si falla, simplemente no rompe la app.
+           * Se sigue trabajando con localStorage.
+           */
         });
     }
   }, []);
 
-  // Registra un nuevo usuario en almacenamiento local
-  // si el correo todavía no existe.
+  /**
+   * Registro de usuario.
+   *
+   * Validaciones:
+   * - No permite correos duplicados
+   */
   const register = (newUser) => {
     const users = JSON.parse(localStorage.getItem("users")) || [];
 
@@ -49,20 +86,30 @@ export function AuthProvider({ children }) {
       return { success: false, message: "El correo ya está registrado" };
     }
 
+    /**
+     * Guarda el usuario nuevo.
+     */
     users.push(newUser);
     localStorage.setItem("users", JSON.stringify(users));
 
     return { success: true, message: "Usuario registrado correctamente" };
   };
 
-  // Inicia sesión validando correo y contraseña.
-  // Si no hay usuarios en localStorage, intenta obtenerlos del servidor.
+  /**
+   * Inicio de sesión.
+   *
+   * - Valida email y contraseña
+   * - Si no hay usuarios, intenta traerlos del servidor
+   */
   const login = async (email, password) => {
     let users = JSON.parse(localStorage.getItem("users")) || [];
 
+    /**
+     * Si no hay usuarios, los carga del backend.
+     */
     if (users.length === 0) {
       try {
-        const response = await fetch(`${API_URL}/users`);
+        const response = await fetch("http://localhost:3001/users");
         const usersDelServer = await response.json();
 
         localStorage.setItem("users", JSON.stringify(usersDelServer));
@@ -75,6 +122,9 @@ export function AuthProvider({ children }) {
       }
     }
 
+    /**
+     * Busca usuario que coincida con email y password.
+     */
     const foundUser = users.find(
       (usuario) => usuario.email === email && usuario.password === password
     );
@@ -83,18 +133,28 @@ export function AuthProvider({ children }) {
       return { success: false, message: "Correo o contraseña incorrectos" };
     }
 
+    /**
+     * Guarda sesión.
+     */
     setUser(foundUser);
     localStorage.setItem("user", JSON.stringify(foundUser));
 
     return { success: true, message: "Inicio de sesión exitoso" };
   };
 
-  // Elimina la sesión actual del estado y del localStorage.
+  /**
+   * Cierra sesión:
+   * - limpia estado
+   * - elimina usuario del localStorage
+   */
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
   };
 
+  /**
+   * Variable booleana útil para proteger rutas.
+   */
   const isAuthenticated = !!user;
 
   return (
@@ -106,6 +166,12 @@ export function AuthProvider({ children }) {
   );
 }
 
+/**
+ * Hook personalizado para usar el contexto.
+ *
+ * Ejemplo:
+ * const { user, login } = useAuth();
+ */
 export function useAuth() {
   return useContext(AuthContext);
 }

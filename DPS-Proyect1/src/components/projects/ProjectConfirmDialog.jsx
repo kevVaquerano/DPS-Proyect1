@@ -1,6 +1,9 @@
 /**
- * Diálogo de confirmación para acciones sensibles sobre proyectos,
- * especialmente eliminación.
+ * Diálogo de confirmación para proyectos.
+ *
+ * Sirve especialmente para acciones sensibles como eliminar un proyecto.
+ * Su estructura es muy parecida al diálogo de tareas,
+ * pero con iconografía y enfoque orientados a proyectos.
  */
 
 import { AlertTriangle, FolderX, X } from "lucide-react";
@@ -12,7 +15,10 @@ export default function ProjectConfirmDialog({
   onConfirmar,
   onCancelar,
 }) {
-  // Define si el diálogo se muestra como peligro o advertencia.
+  /**
+   * Si es peligro, usa color rojo e icono de eliminación.
+   * Si no, usa color ámbar e icono de advertencia.
+   */
   const esPeligro = tipo === "peligro";
 
   return (
@@ -37,6 +43,7 @@ export default function ProjectConfirmDialog({
                 <AlertTriangle className="w-5 h-5 text-amber-600" />
               )}
             </div>
+
             <h3 className="text-lg font-semibold text-gray-900">{titulo}</h3>
           </div>
 

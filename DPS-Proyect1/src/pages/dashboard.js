@@ -1,8 +1,17 @@
 /**
- * Página principal del sistema.
+ * Dashboard principal del sistema.
  *
- * Muestra el dashboard con gestión de proyectos y tareas,
- * incluyendo filtros, estadísticas, formularios y acciones CRUD.
+ * Este archivo es el núcleo visual y funcional del proyecto.
+ * Aquí se administra:
+ * - visualización de proyectos
+ * - visualización de tareas
+ * - filtros
+ * - estadísticas
+ * - formularios
+ * - edición y eliminación
+ * - cambios de estado
+ *
+ * También conecta con el backend mediante los servicios API.
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -41,7 +50,17 @@ import {
   updateTask,
 } from "../services/api";
 
-// Configuración visual y lógica de las columnas del tablero de proyectos.
+/**
+ * COLUMNAS_PROYECTOS
+ *
+ * Define la configuración visual y lógica del tablero Kanban de proyectos.
+ * Cada objeto representa una columna.
+ *
+ * - estado: valor real guardado en el proyecto
+ * - label: texto visible al usuario
+ * - clases visuales: colores de fondo, borde y texto
+ * - Icon: icono mostrado en el encabezado de la columna
+ */
 const COLUMNAS_PROYECTOS = [
   {
     estado: "Pendiente",
@@ -72,7 +91,12 @@ const COLUMNAS_PROYECTOS = [
   },
 ];
 
-// Configuración visual y lógica de las columnas del tablero de tareas.
+/**
+ * COLUMNAS_TAREAS
+ *
+ * Igual que proyectos, pero para tareas.
+ * Aquí los estados están guardados en minúsculas o con guion bajo.
+ */
 const COLUMNAS_TAREAS = [
   {
     estado: "pendiente",
@@ -103,17 +127,32 @@ const COLUMNAS_TAREAS = [
   },
 ];
 
-// Avatar por defecto para usuarios sin imagen de perfil.
+/**
+ * Avatar por defecto.
+ * Se usa cuando el usuario no tiene foto cargada.
+ */
 const DEFAULT_AVATAR =
   "https://ui-avatars.com/api/?name=Usuario&background=6366f1&color=fff";
 
 export default function Dashboard() {
   const router = useRouter();
+
+  /**
+   * user: usuario autenticado actual
+   * isAuthenticated: indica si hay sesión activa
+   */
   const { user, isAuthenticated } = useAuth();
 
+  /**
+   * Refs para hacer scroll desde la Navbar.
+   * Estas referencias se envían al componente Navbar.
+   */
   const proyectosRef = useRef(null);
   const tareasRef = useRef(null);
 
+  /**
+   * ESTADOS DE PROYECTOS
+   */
   const [proyectos, setProyectos] = useState([]);
   const [errorProyectos, setErrorProyectos] = useState(null);
   const [mostrarFormularioProyecto, setMostrarFormularioProyecto] =
@@ -121,46 +160,82 @@ export default function Dashboard() {
   const [proyectoEditando, setProyectoEditando] = useState(null);
   const [proyectoEliminando, setProyectoEliminando] = useState(null);
 
+  /**
+   * ESTADOS DE TAREAS Y USUARIOS
+   */
   const [tareas, setTareas] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [errorTareas, setErrorTareas] = useState(null);
+
+  /**
+   * montado:
+   * se usa para evitar ciertos errores de hidratación/renderizado
+   * cuando la página aún no se ha montado completamente en cliente.
+   */
   const [montado, setMontado] = useState(false);
 
+  /**
+   * FILTROS DE PROYECTOS
+   */
   const [busquedaProyecto, setBusquedaProyecto] = useState("");
   const [prioridadProyectoFiltro, setPrioridadProyectoFiltro] = useState("");
 
+  /**
+   * FILTROS DE TAREAS
+   */
   const [busqueda, setBusqueda] = useState("");
   const [prioridadFiltro, setPrioridadFiltro] = useState("");
   const [proyectoFiltro, setProyectoFiltro] = useState("");
 
+  /**
+   * ESTADOS DE FORMULARIOS Y ELIMINACIÓN DE TAREAS
+   */
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [tareaEditando, setTareaEditando] = useState(null);
   const [tareaEliminando, setTareaEliminando] = useState(null);
 
+  /**
+   * Bandera para controlar permisos.
+   * Si el usuario es gerente, puede crear/editar/eliminar.
+   */
   const esGerente = user?.rol === "gerente";
 
-  // Redirige al login si el usuario no ha iniciado sesión.
+  /**
+   * Si no hay sesión iniciada, redirige al login.
+   * Esto protege la vista del dashboard.
+   */
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("/");
     }
   }, [isAuthenticated, router]);
 
-  // Marca el componente como montado para evitar errores de renderizado.
+  /**
+   * Marca el componente como montado.
+   * Sirve para evitar renderizados prematuros en cliente.
+   */
   useEffect(() => {
     setMontado(true);
   }, []);
 
-  // Carga la información principal del dashboard cuando el usuario está autenticado.
+  /**
+   * Carga la información principal solo cuando:
+   * - el usuario está autenticado
+   * - ya existe información del usuario
+   */
   useEffect(() => {
     if (isAuthenticated && user) {
       cargarDashboard();
     }
   }, [isAuthenticated, user]);
 
-  // Carga proyectos, tareas y usuarios desde el servidor
-  // para construir la vista principal del dashboard.
+  /**
+   * Carga proyectos, tareas y usuarios desde la API.
+   *
+   * Usa Promise.all para hacer las 3 peticiones al mismo tiempo,
+   * haciendo más eficiente la carga inicial.
+   */
   const cargarDashboard = async () => {
     setCargando(true);
     setErrorTareas(null);
@@ -175,6 +250,13 @@ export default function Dashboard() {
 
       const usuariosServidor = usuariosRes.data || [];
 
+      /**
+       * Verifica si el usuario actual existe en la lista traída del servidor.
+       * Si no existe, se agrega manualmente al arreglo final.
+       *
+       * Esto evita problemas cuando el usuario está autenticado localmente
+       * pero aún no aparece en la lista general del backend.
+       */
       const existeUsuarioActual = usuariosServidor.some(
         (usuario) => String(usuario.id) === String(user?.id)
       );
@@ -188,6 +270,10 @@ export default function Dashboard() {
       setTareas(tareasRes.data || []);
       setUsuarios(usuariosFinales);
     } catch {
+      /**
+       * Si falla la conexión, se muestra un mensaje sugeriendo
+       * correr el servidor mock o backend.
+       */
       setErrorTareas(
         "No se pudo conectar con el servidor. Ejecuta: npm run server"
       );
@@ -199,7 +285,13 @@ export default function Dashboard() {
     }
   };
 
-  // Filtra las tareas por estado y por los filtros activos del tablero.
+  /**
+   * Filtra las tareas según:
+   * - estado de la columna
+   * - texto de búsqueda
+   * - prioridad
+   * - proyecto seleccionado
+   */
   const filtrarTareasPorColumna = (estado) =>
     tareas.filter((tarea) => {
       if (tarea.estado !== estado) return false;
@@ -222,7 +314,12 @@ export default function Dashboard() {
       return true;
     });
 
-  // Filtra los proyectos por estado y por los filtros activos.
+  /**
+   * Filtra los proyectos según:
+   * - estado de la columna
+   * - texto de búsqueda
+   * - prioridad
+   */
   const filtrarProyectosPorColumna = (estado) =>
     proyectos.filter((proyecto) => {
       if (proyecto.estado !== estado) return false;
@@ -244,9 +341,14 @@ export default function Dashboard() {
       return true;
     });
 
+  // Indican si hay filtros activos para mostrar el botón "Limpiar filtros".
   const hayFiltrosTareas = busqueda || prioridadFiltro || proyectoFiltro;
   const hayFiltrosProyecto = busquedaProyecto || prioridadProyectoFiltro;
 
+  /**
+   * Estadísticas rápidas de proyectos.
+   * Se usan para las tarjetas resumen superiores.
+   */
   const statsProyectos = {
     total: proyectos.length,
     pendiente: proyectos.filter((proyecto) => proyecto.estado === "Pendiente")
@@ -259,6 +361,9 @@ export default function Dashboard() {
     ).length,
   };
 
+  /**
+   * Estadísticas rápidas de tareas.
+   */
   const statsTareas = {
     total: tareas.length,
     pendiente: tareas.filter((tarea) => tarea.estado === "pendiente").length,
@@ -266,27 +371,31 @@ export default function Dashboard() {
     completada: tareas.filter((tarea) => tarea.estado === "completada").length,
   };
 
-  // Abre el formulario para crear un nuevo proyecto.
+  // Abre el formulario para crear un proyecto nuevo.
   const handleCrearProyecto = () => {
     setProyectoEditando(null);
     setMostrarFormularioProyecto(true);
   };
 
-  // Abre el formulario con los datos del proyecto seleccionado.
+  // Abre el formulario cargando los datos del proyecto a editar.
   const handleEditarProyecto = (proyecto) => {
     setProyectoEditando(proyecto);
     setMostrarFormularioProyecto(true);
   };
 
-  // Abre el diálogo de confirmación para eliminar un proyecto.
+  // Guarda temporalmente el proyecto que se desea eliminar.
   const handleEliminarProyectoClick = (proyecto) => {
     setProyectoEliminando(proyecto);
   };
 
-  // Elimina el proyecto seleccionado y actualiza la vista.
+  /**
+   * Confirma la eliminación del proyecto.
+   * Si sale bien, se elimina del estado local para refrescar la vista.
+   */
   const handleEliminarProyectoConfirmar = async () => {
     try {
       await deleteProject(proyectoEliminando.id);
+
       setProyectos((prev) =>
         prev.filter((proyecto) => proyecto.id !== proyectoEliminando.id)
       );
@@ -297,10 +406,19 @@ export default function Dashboard() {
     }
   };
 
-  // Crea un proyecto nuevo o actualiza uno existente.
+  /**
+   * Guarda proyecto:
+   * - si existe proyectoEditando => actualiza
+   * - si no existe => crea uno nuevo
+   */
   const handleGuardarProyecto = async (datos) => {
     try {
       if (proyectoEditando) {
+        /**
+         * En edición:
+         * se conserva información que no debería cambiar,
+         * como creador y fecha de inicio.
+         */
         const response = await updateProject(proyectoEditando.id, {
           ...proyectoEditando,
           ...datos,
@@ -315,6 +433,11 @@ export default function Dashboard() {
           )
         );
       } else {
+        /**
+         * En creación:
+         * se agregan automáticamente datos internos
+         * como fecha de creación y usuario creador.
+         */
         const response = await createProject({
           ...datos,
           fechaCreacion: new Date().toISOString().split("T")[0],
@@ -331,7 +454,15 @@ export default function Dashboard() {
     }
   };
 
-  // Actualiza el estado del proyecto y ajusta el progreso automáticamente.
+  /**
+   * Cambia el estado de un proyecto.
+   *
+   * Lógica importante:
+   * - Si pasa a "Completado", guarda el progreso anterior y pone 100.
+   * - Si sale de "Completado", restaura el progreso anterior.
+   *
+   * Esto evita perder el porcentaje real que tenía antes de completarse.
+   */
   const handleCambiarEstadoProyecto = async (proyecto, nuevoEstado) => {
     try {
       let progresoNuevo = proyecto.progreso;
@@ -368,21 +499,22 @@ export default function Dashboard() {
     setMostrarFormulario(true);
   };
 
-  // Abre el formulario con los datos de la tarea seleccionada.
+  // Abre el formulario con los datos de la tarea a editar.
   const handleEditarTarea = (tarea) => {
     setTareaEditando(tarea);
     setMostrarFormulario(true);
   };
 
-  // Abre el diálogo de confirmación para eliminar una tarea.
+  // Guarda temporalmente la tarea seleccionada para eliminación.
   const handleEliminarTareaClick = (tarea) => {
     setTareaEliminando(tarea);
   };
 
-  // Elimina la tarea seleccionada y actualiza la vista.
+  // Confirma eliminación de tarea y actualiza el estado local.
   const handleEliminarTareaConfirmar = async () => {
     try {
       await deleteTask(tareaEliminando.id);
+
       setTareas((prev) =>
         prev.filter((tarea) => tarea.id !== tareaEliminando.id)
       );
@@ -393,10 +525,18 @@ export default function Dashboard() {
     }
   };
 
-  // Crea una tarea nueva o actualiza una existente.
+  /**
+   * Guarda tarea:
+   * - actualiza si ya existe
+   * - crea si es nueva
+   */
   const handleGuardarTarea = async (datos) => {
     try {
       if (tareaEditando) {
+        /**
+         * En edición se conserva fechaInicio y creadoPor,
+         * para evitar cambios no deseados en datos base.
+         */
         const response = await updateTask(tareaEditando.id, {
           ...tareaEditando,
           ...datos,
@@ -411,6 +551,12 @@ export default function Dashboard() {
           )
         );
       } else {
+        /**
+         * En creación:
+         * - progreso se normaliza a número
+         * - se asigna creador
+         * - se agrega fecha de creación
+         */
         const response = await createTask({
           ...datos,
           progreso: Number(datos.progreso ?? 0),
@@ -427,7 +573,13 @@ export default function Dashboard() {
     }
   };
 
-  // Actualiza el estado de la tarea y conserva/restaura el progreso anterior.
+  /**
+   * Cambia el estado de una tarea.
+   *
+   * Lógica:
+   * - Si pasa a completada => progreso 100 y guarda progresoAnterior
+   * - Si sale de completada => restaura el porcentaje previo
+   */
   const handleCambiarEstadoTarea = async (tarea, nuevoEstado) => {
     try {
       let progresoNuevo = tarea.progreso;
@@ -457,10 +609,15 @@ export default function Dashboard() {
     }
   };
 
+  /**
+   * Mientras se redirige o se valida autenticación,
+   * se muestra una pantalla mínima de carga.
+   */
   if (!isAuthenticated) {
     return <p style={{ padding: "20px" }}>Cargando...</p>;
   }
 
+  // Evita renderizar hasta que el componente esté montado.
   if (!montado) return null;
 
   return (
@@ -489,6 +646,7 @@ export default function Dashboard() {
           </div>
         </header>
 
+        {/* ==================== SECCIÓN DE PROYECTOS ==================== */}
         <section ref={proyectosRef} style={styles.section}>
           <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2 m-0">
@@ -497,6 +655,10 @@ export default function Dashboard() {
             </h2>
 
             <div className="flex items-center gap-2">
+              {/**
+               * Botón para recargar manualmente la información
+               * desde la API sin recargar toda la página.
+               */}
               <button
                 onClick={cargarDashboard}
                 disabled={cargando}
@@ -506,6 +668,9 @@ export default function Dashboard() {
                 <RefreshCw className={`w-5 h-5 ${cargando ? "animate-spin" : ""}`} />
               </button>
 
+              {/**
+               * Solo gerente puede crear proyectos.
+               */}
               {esGerente && (
                 <button
                   onClick={handleCrearProyecto}
@@ -518,6 +683,7 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* Tarjetas de resumen de proyectos */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
             {[
               {
@@ -568,6 +734,7 @@ export default function Dashboard() {
             ))}
           </div>
 
+          {/* Filtros de proyectos */}
           <div className="bg-gray-50 rounded-xl border border-gray-200 p-4 mb-4 flex flex-wrap gap-3 items-center">
             <div className="relative flex-1 min-w-[180px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -605,6 +772,7 @@ export default function Dashboard() {
             )}
           </div>
 
+          {/* Mensaje de error de proyectos */}
           {errorProyectos && (
             <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3">
               <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
@@ -628,6 +796,11 @@ export default function Dashboard() {
               <p className="text-sm text-gray-400">No hay proyectos registrados.</p>
             </div>
           ) : (
+            /**
+             * Se pintan las columnas del tablero Kanban según COLUMNAS_PROYECTOS.
+             * Cada columna renderiza únicamente los proyectos que coinciden
+             * con su estado y con los filtros activos.
+             */
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {COLUMNAS_PROYECTOS.map(
                 ({
@@ -702,6 +875,7 @@ export default function Dashboard() {
           )}
         </section>
 
+        {/* ==================== SECCIÓN DE TAREAS ==================== */}
         <section ref={tareasRef} style={{ ...styles.section, marginTop: "20px" }}>
           <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2 m-0">
@@ -731,6 +905,7 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* Tarjetas de resumen de tareas */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
             {[
               {
@@ -781,6 +956,7 @@ export default function Dashboard() {
             ))}
           </div>
 
+          {/* Filtros de tareas */}
           <div className="bg-gray-50 rounded-xl border border-gray-200 p-4 mb-4 flex flex-wrap gap-3 items-center">
             <div className="relative flex-1 min-w-[180px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -832,6 +1008,7 @@ export default function Dashboard() {
             )}
           </div>
 
+          {/* Mensaje de error de tareas */}
           {errorTareas && (
             <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3">
               <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
@@ -919,6 +1096,7 @@ export default function Dashboard() {
         </section>
       </div>
 
+      {/* Modal/formulario de tareas */}
       {mostrarFormulario && (
         <TaskForm
           tarea={tareaEditando}
@@ -931,6 +1109,7 @@ export default function Dashboard() {
         />
       )}
 
+      {/* Diálogo de confirmación para eliminar tarea */}
       {tareaEliminando && (
         <ConfirmDialog
           titulo="Eliminar tarea"
@@ -941,6 +1120,7 @@ export default function Dashboard() {
         />
       )}
 
+      {/* Modal/formulario de proyectos */}
       {mostrarFormularioProyecto && (
         <ProjectForm
           proyecto={proyectoEditando}
@@ -951,6 +1131,7 @@ export default function Dashboard() {
         />
       )}
 
+      {/* Diálogo de confirmación para eliminar proyecto */}
       {proyectoEliminando && (
         <ProjectConfirmDialog
           titulo="Eliminar proyecto"

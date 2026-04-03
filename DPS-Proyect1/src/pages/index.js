@@ -1,8 +1,12 @@
 /**
- * Página principal de acceso.
+ * Página principal de acceso al sistema.
  *
- * Permite iniciar sesión o registrar un nuevo usuario
- * con validaciones básicas de nombre, correo y contraseña.
+ * Funciones principales:
+ * - Permite iniciar sesión.
+ * - Permite registrar nuevos usuarios.
+ * - Valida nombre, correo y contraseña.
+ * - Cambia entre modo login y modo registro.
+ * - Si el login es correcto, redirige al dashboard.
  */
 
 import { useState } from "react";
@@ -11,84 +15,152 @@ import { useAuth } from "../context/AuthContext";
 
 export default function Home() {
   const router = useRouter();
+
+  /**
+   * useAuth viene del contexto global de autenticación.
+   * login: valida credenciales de acceso.
+   * register: registra un nuevo usuario.
+   */
   const { login, register } = useAuth();
 
+  /**
+   * isLogin:
+   * true  = mostrar formulario de inicio de sesión
+   * false = mostrar formulario de registro
+   */
   const [isLogin, setIsLogin] = useState(true);
+
+  /**
+   * formData:
+   * Guarda los valores que el usuario escribe en el formulario.
+   */
   const [formData, setFormData] = useState({
     nombre: "",
     email: "",
     password: "",
     rol: "usuario",
   });
+
+  /**
+   * message:
+   * Se usa para mostrar errores o mensajes de éxito al usuario.
+   */
   const [message, setMessage] = useState("");
 
-  // Actualiza el estado del formulario según el campo editado.
+  // Actualiza dinámicamente el estado del formulario según el input modificado.
   const handleChange = (e) => {
     const { name, value } = e.target;
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  // Valida el formato básico del correo electrónico.
+  /**
+   * Valida formato básico del correo.
+   *
+   * Esta validación revisa:
+   * - texto antes del @
+   * - dominio después del @
+   * - extensión final válida
+   */
   const validateEmail = (email) => {
     return /^[A-Za-z0-9.]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email);
   };
 
-  // Permite únicamente letras y espacios en el nombre.
+  /**
+   * Valida el nombre:
+   * - solo letras
+   * - espacios permitidos
+   * - incluye tildes y ñ
+   *
+   * No permite números ni símbolos.
+   */
   const validateName = (nombre) => {
     return /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/.test(nombre);
   };
 
-  // Obtiene los usuarios guardados en localStorage.
+  /**
+   * Obtiene los usuarios guardados en localStorage.
+   *
+   * Esto ayuda a verificar si ya existe un nombre o correo registrado.
+   * Si no hay datos guardados, retorna un arreglo vacío.
+   */
   const getUsers = () => {
     return JSON.parse(localStorage.getItem("users")) || [];
   };
 
-  // Maneja el flujo de inicio de sesión o registro
-  // según el modo actual del formulario.
+  /**
+   * Maneja el envío del formulario.
+   *
+   * Según el modo actual:
+   * - Si isLogin es true, intenta iniciar sesión.
+   * - Si isLogin es false, intenta registrar un nuevo usuario.
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
 
     const { nombre, email, password, rol } = formData;
 
+    /**
+     * BLOQUE DE LOGIN
+     */
     if (isLogin) {
+      // Validar que campos obligatorios no estén vacíos.
       if (!email.trim() || !password.trim()) {
         setMessage("Completa todos los campos obligatorios.");
         return;
       }
 
+      // Validar formato del correo.
       if (!validateEmail(email.trim())) {
         setMessage("Ingresa un correo válido.");
         return;
       }
 
+      // Intentar inicio de sesión usando la función del contexto.
       const result = await login(email.trim(), password);
 
       if (result.success) {
         setMessage("Inicio de sesión exitoso.");
+
+        /**
+         * Si el login es correcto, redirige al dashboard.
+         * Aquí ya se asume que el usuario quedó autenticado.
+         */
         router.push("/dashboard");
       } else {
+        // Muestra el mensaje que retorna la lógica del contexto.
         setMessage(result.message);
       }
 
       return;
     }
 
+    /**
+     * BLOQUE DE REGISTRO
+     */
     const users = getUsers();
 
+    // Validar que el nombre no esté vacío.
     if (!nombre.trim()) {
       setMessage("El nombre no puede quedar vacío.");
       return;
     }
 
+    // Validar que el nombre solo tenga letras.
     if (!validateName(nombre.trim())) {
       setMessage("El nombre no debe contener números ni símbolos.");
       return;
     }
 
+    /**
+     * Verifica si ya existe otro usuario con el mismo nombre.
+     * Se compara en minúsculas y sin espacios innecesarios
+     * para evitar duplicados "aparentes".
+     */
     const nombreRepetido = users.some(
       (user) =>
         (user.nombre || "").toLowerCase().trim() === nombre.toLowerCase().trim()
@@ -99,11 +171,13 @@ export default function Home() {
       return;
     }
 
+    // Validar correo vacío.
     if (!email.trim()) {
       setMessage("El correo no puede quedar vacío.");
       return;
     }
 
+    // Validar estructura del correo.
     if (!validateEmail(email.trim())) {
       setMessage(
         "El correo solo puede contener letras, números y puntos. No se permiten símbolos especiales."
@@ -111,6 +185,10 @@ export default function Home() {
       return;
     }
 
+    /**
+     * Verifica si ya existe otro usuario con el mismo correo.
+     * Esto es importante para no duplicar cuentas.
+     */
     const emailRepetido = users.some(
       (user) =>
         (user.email || "").toLowerCase().trim() === email.toLowerCase().trim()
@@ -121,11 +199,17 @@ export default function Home() {
       return;
     }
 
+    // Validar contraseña vacía.
     if (!password.trim()) {
       setMessage("La contraseña no puede quedar vacía.");
       return;
     }
 
+    /**
+     * Construcción del nuevo usuario.
+     * - id: se genera con Date.now() para hacerlo único.
+     * - email: se guarda en minúsculas para evitar duplicados inconsistentes.
+     */
     const newUser = {
       id: Date.now().toString(),
       nombre: nombre.trim(),
@@ -134,10 +218,17 @@ export default function Home() {
       rol,
     };
 
+    // Registrar usuario usando la función del contexto.
     const result = register(newUser);
 
     if (result.success) {
       setMessage("Usuario registrado correctamente. Ahora inicia sesión.");
+
+      /**
+       * Después de registrar:
+       * - vuelve al modo login
+       * - limpia el formulario
+       */
       setIsLogin(true);
       setFormData({
         nombre: "",
@@ -158,6 +249,10 @@ export default function Home() {
         </h1>
 
         <form onSubmit={handleSubmit} style={styles.form}>
+          {/**
+           * Estos campos solo se muestran en modo registro.
+           * En login solo se piden correo y contraseña.
+           */}
           {!isLogin && (
             <>
               <input
@@ -204,6 +299,9 @@ export default function Home() {
           </button>
         </form>
 
+        {/**
+         * message se muestra si existe un texto de error o éxito.
+         */}
         {message && <p style={styles.message}>{message}</p>}
 
         <p style={styles.switchText}>
@@ -211,6 +309,11 @@ export default function Home() {
           <button
             type="button"
             onClick={() => {
+              /**
+               * Cambia entre login y registro.
+               * También limpia el mensaje anterior para que no se arrastre
+               * al cambiar de formulario.
+               */
               setIsLogin(!isLogin);
               setMessage("");
             }}

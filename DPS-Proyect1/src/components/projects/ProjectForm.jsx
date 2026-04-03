@@ -1,9 +1,12 @@
 /**
  * Modal de formulario para crear o editar proyectos.
  *
- * Valida nombre, descripción, asignación, fechas y progreso.
- * También controla el progreso automático al marcar un proyecto
- * como completado.
+ * Este componente:
+ * - Carga datos del proyecto cuando se edita
+ * - Valida campos obligatorios
+ * - Valida fechas
+ * - Controla automáticamente el progreso al completar
+ * - Envía datos listos al componente padre con onGuardar()
  */
 
 import { useEffect, useState } from "react";
@@ -21,6 +24,9 @@ const ESTADOS = [
   { value: "Completado", label: "Completado" },
 ];
 
+/**
+ * Valores iniciales del formulario.
+ */
 const FORM_INICIAL = {
   nombre: "",
   descripcion: "",
@@ -43,8 +49,10 @@ export default function ProjectForm({
   const [form, setForm] = useState(FORM_INICIAL);
   const [errores, setErrores] = useState({});
 
-  // Carga los datos del proyecto en el formulario cuando se edita.
-  // Si no hay proyecto, reinicia el formulario con valores por defecto.
+  /**
+   * Si se está editando, llena el formulario con datos del proyecto.
+   * Si se está creando, limpia el formulario.
+   */
   useEffect(() => {
     if (proyecto) {
       setForm({
@@ -64,7 +72,9 @@ export default function ProjectForm({
     setForm(FORM_INICIAL);
   }, [proyecto]);
 
-  // Valida que el proyecto tenga información completa y fechas válidas.
+  /**
+   * Valida la información del proyecto.
+   */
   const validar = () => {
     const nuevosErrores = {};
 
@@ -84,6 +94,10 @@ export default function ProjectForm({
       nuevosErrores.progreso = "El progreso debe estar entre 0 y 100";
     }
 
+    /**
+     * Regla lógica:
+     * si el proyecto está completado, su progreso debe ser 100.
+     */
     if (form.estado === "Completado" && Number(form.progreso) !== 100) {
       nuevosErrores.progreso =
         "Si el proyecto está completado, el progreso debe ser 100";
@@ -100,6 +114,9 @@ export default function ProjectForm({
       nuevosErrores.fechaFin = "La fecha final es obligatoria";
     }
 
+    /**
+     * Solo se valida contra hoy cuando es un proyecto nuevo.
+     */
     if (!proyecto && form.fechaInicio) {
       const inicio = new Date(`${form.fechaInicio}T00:00:00`);
       if (inicio < hoy) {
@@ -108,6 +125,10 @@ export default function ProjectForm({
       }
     }
 
+    /**
+     * Guarda la fecha final original para permitir editar otros campos
+     * sin bloquear proyectos antiguos con fechas ya vencidas.
+     */
     const fechaFinOriginal = proyecto?.fechaFin || "";
 
     if (form.fechaFin) {
@@ -120,6 +141,9 @@ export default function ProjectForm({
       }
     }
 
+    /**
+     * La fecha final no puede ir antes de la fecha inicial.
+     */
     if (form.fechaInicio && form.fechaFin) {
       const inicio = new Date(`${form.fechaInicio}T00:00:00`);
       const fin = new Date(`${form.fechaFin}T00:00:00`);
@@ -134,7 +158,9 @@ export default function ProjectForm({
     return Object.keys(nuevosErrores).length === 0;
   };
 
-  // Envía los datos del formulario solo si todas las validaciones son correctas.
+  /**
+   * Envía la información validada al componente padre.
+   */
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!validar()) return;
@@ -147,8 +173,13 @@ export default function ProjectForm({
     });
   };
 
-  // Controla cambios del formulario y conserva/restaura el progreso
-  // cuando el estado pasa a completado o vuelve a otro estado.
+  /**
+   * Maneja cambios del formulario.
+   *
+   * Lógica especial:
+   * - si pasa a completado, progreso = 100
+   * - si sale de completado, restaura progresoAnterior
+   */
   const handleChange = (e) => {
     const { name, value } = e.target;
 

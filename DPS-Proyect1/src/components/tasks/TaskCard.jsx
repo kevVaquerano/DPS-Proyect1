@@ -17,6 +17,10 @@ import {
   Users,
 } from "lucide-react";
 
+/**
+ * Configuración visual según prioridad.
+ * Esto permite reutilizar estilos fácilmente sin llenar el JSX de condiciones.
+ */
 const PRIORIDAD = {
   alta: {
     label: "Alta",
@@ -38,6 +42,9 @@ const PRIORIDAD = {
   },
 };
 
+/**
+ * Configuración visual según estado.
+ */
 const ESTADO = {
   pendiente: {
     label: "Pendiente",
@@ -56,6 +63,9 @@ const ESTADO = {
   },
 };
 
+/**
+ * Opciones de estado para el select del usuario no gerente.
+ */
 const ESTADOS_OPCIONES = [
   { value: "pendiente", label: "Pendiente" },
   { value: "en_progreso", label: "En Progreso" },
@@ -71,17 +81,31 @@ export default function TaskCard({
   onEliminar,
   onCambiarEstado,
 }) {
+  /**
+   * Si por alguna razón la prioridad o el estado vienen vacíos
+   * o con un valor desconocido, se usa una configuración por defecto.
+   */
   const prioridadConf = PRIORIDAD[tarea.prioridad] || PRIORIDAD.media;
   const estadoConf = ESTADO[tarea.estado] || ESTADO.pendiente;
 
+  /**
+   * Busca información relacionada para mostrar nombres
+   * en lugar de solo IDs.
+   */
   const creador = usuarios.find((u) => String(u.id) === String(tarea.creadoPor));
   const usuarioAsignado = usuarios.find(
     (u) => String(u.id) === String(tarea.assignedTo)
   );
   const proyecto = proyectos.find((p) => String(p.id) === String(tarea.projectId));
+  /**
+   * Se fuerza el progreso como número para evitar errores visuales.
+   */
   const progreso = Number(tarea.progreso || 0);
 
-  // Formatea una fecha a texto legible en español.
+  /**
+   * Convierte una fecha tipo YYYY-MM-DD a una fecha legible.
+   * Si no existe, devuelve "Sin fecha".
+   */
   const formatFecha = (str) => {
     if (!str) return "Sin fecha";
     return new Date(`${str}T00:00:00`).toLocaleDateString("es-ES", {
@@ -91,16 +115,26 @@ export default function TaskCard({
     });
   };
 
+  /**
+   * Fecha actual sin horas para comparar solo por día.
+   */
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
 
+  /**
+   * Compatibilidad con dos posibles nombres de campo.
+   */
   const fechaFinTexto = tarea.fechaFin || tarea.fechaLimite || "";
   const fechaInicioTexto = tarea.fechaInicio || tarea.fechaCreacion || "";
 
   const fechaFin = fechaFinTexto ? new Date(`${fechaFinTexto}T00:00:00`) : null;
 
-  // Una tarea se considera retrasada si su fecha final ya pasó
-  // y todavía no está completada.
+  /**
+   * Una tarea está retrasada cuando:
+   * - tiene fecha fin
+   * - esa fecha ya pasó
+   * - y todavía no está completada
+   */
   const retrasada =
     !!fechaFin &&
     fechaFin.getTime() < hoy.getTime() &&
@@ -136,6 +170,9 @@ export default function TaskCard({
         )}
 
         <div className="space-y-1.5 text-xs text-gray-500">
+          {/**
+           * Solo muestra el proyecto si logró encontrarlo.
+           */}
           {proyecto && (
             <div className="flex items-center gap-1.5">
               <FolderOpen className="w-3.5 h-3.5 text-indigo-400 flex-shrink-0" />
@@ -165,6 +202,9 @@ export default function TaskCard({
               retrasada ? "text-red-500 font-medium" : ""
             }`}
           >
+              {/**
+             * Si está retrasada se muestra un icono más evidente.
+             */}
             {retrasada ? (
               <CalendarX className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
             ) : (
@@ -182,7 +222,11 @@ export default function TaskCard({
             <span>Progreso actual: {progreso}%</span>
           </div>
         </div>
-
+        
+          {/**
+         * Barra visual de progreso.
+         * El ancho depende del porcentaje actual.
+         */}
         <div className="mt-4">
           <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
             <div
@@ -193,6 +237,14 @@ export default function TaskCard({
         </div>
 
         <div className="mt-4 pt-3 border-t border-gray-100 flex flex-wrap items-center gap-2">
+          {/**
+           * Si es gerente:
+           * - puede editar
+           * - puede eliminar
+           *
+           * Si NO es gerente:
+           * - puede cambiar el estado desde un select
+         */}
           {esGerente ? (
             <>
               <button

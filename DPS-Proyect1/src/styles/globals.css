@@ -1,33 +1,60 @@
 /* 
   Estilos globales de la aplicación.
-  Define Tailwind y animaciones reutilizables para modales y transiciones.
+
+  ¿Qué contiene este archivo?
+  - Importación de TailwindCSS
+  - Variables personalizadas de animaciones
+  - Animaciones reutilizables para toda la app
+
+  Este archivo se aplica en TODA la aplicación (global).
 */
 
 @import "tailwindcss";
 
+/**
+ * Variables de animación reutilizables.
+ *
+ * Se usan como clases:
+ * - animate-fade-in
+ * - animate-slide-up
+ *
+ * Esto permite mantener consistencia visual en todos los modales.
+ */
 @theme {
   --animate-fade-in: fadeIn 0.15s ease-out;
   --animate-slide-up: slideUp 0.2s ease-out;
 }
 
-/* Animación de aparición suave. */
+/**
+ * Animación: fadeIn
+ *
+ * Uso:
+ * - Para overlays (fondos oscuros)
+ * - Aparición suave
+ */
 @keyframes fadeIn {
   from {
-    opacity: 0;
+    opacity: 0; /* Invisible */
   }
   to {
-    opacity: 1;
+    opacity: 1; /* Visible */
   }
 }
 
-/* Animación de entrada desde abajo. */
+/**
+ * Animación: slideUp
+ *
+ * Uso:
+ * - Para modales
+ * - Hace que aparezcan desde abajo suavemente
+ */
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(8px); /* empieza abajo */
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0); /* posición final */
   }
 }

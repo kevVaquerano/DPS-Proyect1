@@ -1,9 +1,11 @@
 /**
- * Navbar principal del dashboard.
+ * Barra de navegación principal del dashboard.
  *
- * Se muestra únicamente cuando el usuario ha iniciado sesión.
- * Permite desplazarse a las secciones de proyectos y tareas
- * y cerrar sesión.
+ * Esta barra:
+ * - Solo aparece si el usuario ha iniciado sesión.
+ * - Permite navegar por scroll a la sección de proyectos.
+ * - Permite navegar por scroll a la sección de tareas.
+ * - Permite cerrar la sesión actual.
  */
 
 "use client";
@@ -13,9 +15,21 @@ import { useAuth } from "../context/AuthContext";
 
 export default function Navbar({ proyectosRef, tareasRef }) {
   const router = useRouter();
+
+  /**
+   * Datos y acciones del contexto de autenticación:
+   * - isAuthenticated: indica si hay sesión activa.
+   * - logout: cierra la sesión del usuario actual.
+   */
   const { isAuthenticated, logout } = useAuth();
 
-  // Hace scroll suave hacia la sección indicada usando su ref.
+  /**
+   * Hace desplazamiento suave hacia una sección específica.
+   *
+   * Recibe una ref creada con useRef desde el dashboard.
+   * Si la referencia existe y apunta a un elemento del DOM,
+   * se hace scroll automático hacia esa sección.
+   */
   const scrollToSection = (ref) => {
     if (ref?.current) {
       ref.current.scrollIntoView({
@@ -25,9 +39,15 @@ export default function Navbar({ proyectosRef, tareasRef }) {
     }
   };
 
+  /**
+   * Si el usuario no está autenticado, no se muestra la navbar.
+   * Esto evita que aparezca en la pantalla de login/registro.
+   */
   if (!isAuthenticated) return null;
 
-  // Cierra la sesión actual y redirige al login.
+  /**
+   * Cierra la sesión actual y luego redirige a la página principal.
+   */
   const handleLogout = () => {
     logout();
     router.push("/");
@@ -49,6 +69,7 @@ export default function Navbar({ proyectosRef, tareasRef }) {
             Gestión de Proyectos
           </button>
         </li>
+
         <li>
           <button
             type="button"

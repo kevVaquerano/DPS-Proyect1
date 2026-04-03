@@ -1,8 +1,16 @@
 /**
  * Tarjeta visual de un proyecto.
  *
- * Muestra estado, prioridad, usuarios relacionados,
- * fechas, progreso y acciones disponibles según el rol.
+ * Muestra:
+ * - estado
+ * - prioridad
+ * - creador
+ * - asignado
+ * - fechas
+ * - progreso
+ * - acciones según rol
+ *
+ * También detecta si el proyecto está retrasado.
  */
 
 import {
@@ -69,6 +77,10 @@ export default function ProjectCard({
   onEliminar,
   onCambiarEstado,
 }) {
+  /**
+   * Busca el nombre del creador y del usuario asignado
+   * a partir de sus IDs.
+   */
   const creador = usuarios.find(
     (u) => String(u.id) === String(proyecto.creadoPor)
   );
@@ -81,7 +93,9 @@ export default function ProjectCard({
   const estadoConf = ESTADO[proyecto.estado] || ESTADO.Pendiente;
   const progreso = Number(proyecto.progreso || 0);
 
-  // Convierte una fecha en formato ISO a una fecha legible.
+  /**
+   * Convierte fecha a formato legible.
+   */
   const formatFecha = (str) => {
     if (!str) return "Sin fecha";
     return new Date(`${str}T00:00:00`).toLocaleDateString("es-ES", {
@@ -98,8 +112,12 @@ export default function ProjectCard({
     ? new Date(`${proyecto.fechaFin}T00:00:00`)
     : null;
 
-  // Un proyecto está retrasado si la fecha final ya venció
-  // y todavía no está completado.
+  /**
+   * El proyecto está retrasado si:
+   * - tiene fecha fin
+   * - esa fecha ya pasó
+   * - y no está completado
+   */
   const retrasado =
     !!fechaFin &&
     fechaFin.getTime() < hoy.getTime() &&
@@ -178,6 +196,9 @@ export default function ProjectCard({
           </div>
         </div>
 
+        {/**
+         * Barra de progreso visual.
+         */}
         <div className="mt-4">
           <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
             <div
